@@ -1,0 +1,10 @@
+{
+  "inventory_cleared": {
+    "subtitle": "Inventory cleared",
+    "sounds": ["death_roulette:itemclear"]
+  },
+  "inventory_spared": {
+    "subtitle": "Inventory spared",
+    "sounds": ["death_roulette:lucky"]
+  }
+}
