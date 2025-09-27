@@ -13,11 +13,13 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.config.ModConfig;
@@ -25,8 +27,11 @@ import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.registries.*;
 import org.slf4j.Logger;
-
+import top.theillusivec4.curios.api.CuriosApi;
+import top.theillusivec4.curios.api.type.inventory.ICurioStacksHandler;
 import java.util.List;
+import java.util.Map;
+
 
 // The value here should match an entry in the META-INF/mods.toml file
 @Mod(DeathRoulette.MODID)
@@ -63,6 +68,8 @@ public class DeathRoulette {
 
         // Register our mod's ForgeConfigSpec so that Forge can create and load the config file for us
         ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, Config.SPEC, "death_roulette-common.toml");
+
+
     }
 
     private void commonSetup(final FMLCommonSetupEvent event) {
@@ -88,6 +95,9 @@ public class DeathRoulette {
 
         @SubscribeEvent
         public static void onPlayerRespawn(PlayerEvent.PlayerRespawnEvent event) {
+            //Ignore death roulette on beating the ender dragon
+            if (event.isEndConquered()) return;
+
             Player player_ = event.getEntity();
             if (!(player_ instanceof ServerPlayer player)) return;
 
@@ -104,6 +114,24 @@ public class DeathRoulette {
 
                 //Clear out inventory
                 player.getInventory().clearContent();
+
+                //Clear Curios if they're included
+                if (ModList.get().isLoaded("curios")) {
+
+                    //Code copied from CuriosCommand
+                    CuriosApi.getCuriosHelper().getCuriosHandler(player).ifPresent(handler -> {
+                        Map<String, ICurioStacksHandler> curios = handler.getCurios();
+
+                        for (String id : curios.keySet()) {
+                            ICurioStacksHandler stacksHandler = curios.get(id);
+                            for (int i = 0; i < stacksHandler.getSlots(); i++) {
+                                stacksHandler.getStacks().setStackInSlot(i, ItemStack.EMPTY);
+                                stacksHandler.getCosmeticStacks().setStackInSlot(i, ItemStack.EMPTY);
+                            }
+                        }
+                    });
+
+                }
                 //System.out.println("Player " + player.getName().getString() + " loss their items!");
 
                 //Make whole server hear item loss noise
