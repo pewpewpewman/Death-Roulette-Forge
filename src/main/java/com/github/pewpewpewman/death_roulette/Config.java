@@ -23,6 +23,10 @@ public class Config {
             .comment("The percent chance player inventory will be wiped on death")
             .defineInRange("resetChance", 0.05, 0.0, 1.0);
 
+    public static ForgeConfigSpec.BooleanValue USE_REALLY_STUPID_CLEAR_SOUND = BUILDER
+            .comment("Use a way worse death sound courtesy of https://www.youtube.com/watch?v=WMWgbTpStzU")
+            .define("useReallyStupidDeathSound", false);
+
     static final ForgeConfigSpec SPEC = BUILDER.build();
 
     private static boolean validateItemName(final Object obj) {

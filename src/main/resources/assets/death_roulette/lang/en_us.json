@@ -1,4 +1,4 @@
 {
-  "death_roulette.inventory_cleared_action_bar": "☠ BAD LUCK! ☠",
+  "death_roulette.inventory_cleared_title": "☠ BAD LUCK! ☠",
   "death_roulette.inventory_cleared_server_message": "%s has lost all of their items!"
 }

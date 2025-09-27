@@ -1,11 +1,13 @@
 package com.github.pewpewpewman.death_roulette;
 
 import com.mojang.logging.LogUtils;
+import lain.mods.cos.impl.ModObjects;
+import lain.mods.cos.init.forge.ForgeCosmeticArmorReworked;
+import lain.mods.cos.impl.InventoryManager;
+import lain.mods.cos.api.CosArmorAPI;
 import net.minecraft.ChatFormatting;
-import net.minecraft.commands.arguments.ComponentArgument;
-import net.minecraft.commands.arguments.EntityArgument;
 import net.minecraft.network.chat.*;
-import net.minecraft.network.protocol.game.ClientboundSetActionBarTextPacket;
+import net.minecraft.network.protocol.game.ClientboundSetTitleTextPacket;
 import net.minecraft.network.protocol.game.ClientboundSetTitlesAnimationPacket;
 import net.minecraft.network.protocol.game.ClientboundSoundPacket;
 import net.minecraft.resources.ResourceLocation;
@@ -32,7 +34,6 @@ import top.theillusivec4.curios.api.type.inventory.ICurioStacksHandler;
 import java.util.List;
 import java.util.Map;
 
-
 // The value here should match an entry in the META-INF/mods.toml file
 @Mod(DeathRoulette.MODID)
 public class DeathRoulette {
@@ -43,12 +44,17 @@ public class DeathRoulette {
     // Directly reference a slf4j logger
     private static final Logger LOGGER = LogUtils.getLogger();
 
+    //Config Values
     private static double RESET_CHANCE = 0.0;
+    private static boolean USE_REALLY_STUPID_CLEAR_SOUND = false;
+
+    //Sounds
     private static final DeferredRegister<SoundEvent> SOUND_EVENTS =
             DeferredRegister.create(ForgeRegistries.SOUND_EVENTS, MODID);
 
     private static final RegistryObject<SoundEvent> INVENTORY_CLEARED_SOUND = registerSoundEvents("inventory_cleared");
     private static final RegistryObject<SoundEvent> INVENTORY_SPARE_SOUND = registerSoundEvents("inventory_spared");
+    private static final RegistryObject<SoundEvent> REALLY_STUPID_INVENTORY_CLEARED_SOUND = registerSoundEvents("really_stupid_clear_sound");
 
 
     public DeathRoulette() {
@@ -68,8 +74,6 @@ public class DeathRoulette {
 
         // Register our mod's ForgeConfigSpec so that Forge can create and load the config file for us
         ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, Config.SPEC, "death_roulette-common.toml");
-
-
     }
 
     private void commonSetup(final FMLCommonSetupEvent event) {
@@ -77,7 +81,7 @@ public class DeathRoulette {
         //LOGGER.info("HELLO FROM COMMON SETUP");
 
         RESET_CHANCE = Config.RESET_CHANCE.get();
-        //System.out.println("RESET CHANCE: " + RESET_CHANCE);
+        USE_REALLY_STUPID_CLEAR_SOUND = Config.USE_REALLY_STUPID_CLEAR_SOUND.get();
     }
 
     public static void registerSounds(IEventBus modEventBus) {
@@ -87,7 +91,6 @@ public class DeathRoulette {
     private static RegistryObject<SoundEvent> registerSoundEvents(String name) {
         return SOUND_EVENTS.register(name, () -> SoundEvent.createVariableRangeEvent(new ResourceLocation(MODID, name)));
     }
-
 
     // You can use EventBusSubscriber to automatically register all static methods in the class annotated with @SubscribeEvent
     @Mod.EventBusSubscriber(modid = MODID, bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.DEDICATED_SERVER)
@@ -132,22 +135,27 @@ public class DeathRoulette {
                     });
 
                 }
+
+                //Clear cosmetic armor if it's included
+                if (ModList.get().isLoaded("cosmeticarmorreworked")) {
+                    ModObjects.invMan.getCosArmorInventory(player.getUUID()).clearContent();
+                }
+
                 //System.out.println("Player " + player.getName().getString() + " loss their items!");
 
                 //Make whole server hear item loss noise
-                soundToPlay = INVENTORY_CLEARED_SOUND;
+                soundToPlay = USE_REALLY_STUPID_CLEAR_SOUND ? REALLY_STUPID_INVENTORY_CLEARED_SOUND : INVENTORY_CLEARED_SOUND;
                 hearers = player.getServer().getPlayerList().getPlayers();
 
                 //Make clear text appear
-                player.connection.send(new ClientboundSetActionBarTextPacket(Component.translatable("death_roulette.inventory_cleared_action_bar").withStyle(ChatFormatting.RED).withStyle(ChatFormatting.BOLD)));
-                //player.connection.send(new ClientboundSetTitlesAnimationPacket(0, 100, 4));
-
+                MutableComponent actionBarText = Component.translatable("death_roulette.inventory_cleared_title").withStyle(ChatFormatting.RED).withStyle(ChatFormatting.BOLD);
+                player.connection.send(new ClientboundSetTitleTextPacket(actionBarText));
+                player.connection.send(new ClientboundSetTitlesAnimationPacket(20, 40, 20));
 
                 //Tell entire server about this
                 for(ServerPlayer serverPlayer : player.getServer().getPlayerList().getPlayers()) {
-                    serverPlayer.sendSystemMessage(
-                            Component.translatable("death_roulette.inventory_cleared_server_message", player.getDisplayName()).withStyle(ChatFormatting.RED),
-                            false);
+                    MutableComponent chatText = Component.translatable("death_roulette.inventory_cleared_server_message", player.getDisplayName()).withStyle(ChatFormatting.RED);
+                    serverPlayer.sendSystemMessage(chatText, false);
                 }
             }
             else {

@@ -71,3 +71,8 @@ issueTrackerURL="https://github.com/pewpewpewman/Death-Roulette-Forge/issues" #o
     modId = "curios"
     mandatory = false
     versionRange = "5.14.1+1.20.1"
+
+[[dependencies."${mod_id}"]] #optional
+    modId = "cosmeticarmorreworked"
+    mandatory = false
+    versionRange = "1.20.1-v1a"

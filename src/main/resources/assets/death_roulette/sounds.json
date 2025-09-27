@@ -6,5 +6,9 @@
   "inventory_spared": {
     "subtitle": "Inventory spared",
     "sounds": ["death_roulette:lucky"]
+  },
+  "really_stupid_clear_sound": {
+    "subtitle": "Inventory cleared",
+    "sounds": ["death_roulette:auhhhaughhhaughhhhh"]
   }
 }

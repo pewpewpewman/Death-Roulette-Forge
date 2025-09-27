@@ -140,8 +140,16 @@ repositories {
     // ForgeGradle automatically adds the Forge maven and Maven Central for you
 
     maven {
-        name = "Illusive Soulworks maven"
-        url = "https://maven.theillusivec4.top/"
+        name "Illusive Soulworks maven"
+        url "https://maven.theillusivec4.top/"
+    }
+
+    maven {
+        url 'https://www.cursemaven.com'
+        // FG4: It's recommended to uncomment the following block
+        content {
+            includeGroup "curse.maven"
+        }
     }
 
     // If you have mod jar dependencies in ./libs, you can declare them as a repository like so.
@@ -170,10 +178,15 @@ dependencies {
     // Use the full Curios API jar at runtime
     runtimeOnly fg.deobf("top.theillusivec4.curios:curios-forge:${curios_version}")
 
+    //Cosmetic Armor Compatability
+    implementation fg.deobf("curse.maven:cosmetic-armor-reworked-237307:4600191")
+
     // Example mod dependency using a mod jar from ./libs with a flat dir repository
     // This maps to ./libs/coolmod-${mc_version}-${coolmod_version}.jar
     // The group id is ignored when searching -- in this case, it is "blank"
     // implementation fg.deobf("blank:coolmod-${mc_version}:${coolmod_version}")
+
+
 
     // For more info:
     // http://www.gradle.org/docs/current/userguide/artifact_dependencies_tutorial.html
